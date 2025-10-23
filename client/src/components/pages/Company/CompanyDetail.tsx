@@ -4,9 +4,9 @@ import { ArrowLeft, Building, MapPin, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useParams } from 'react-router-dom';
 
-import AverageRating from '../../components/AverageRating';
-import ReviewCard from '../../components/ReviewCard';
-import ReviewForm from '../../components/ReviewForm';
+import AverageRating from '../../../components/AverageRating';
+import ReviewCard from '../../../components/ReviewCard';
+import ReviewForm from '../../../components/ReviewForm';
 import { useAuth } from '../../context/AuthContext';
 
 // Proper interfaces
