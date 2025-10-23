@@ -26,6 +26,18 @@ module.exports = (sequelize) => {
     imageUrl: {
       type: DataTypes.STRING,
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     isApproved: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

@@ -1,13 +1,10 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
-
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Building2 } from 'lucide-react';
-
 import CompanyCard from '../components/CompanyCard';
 import SearchFilterBar from '../components/SearchFilterBar';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Home = () => {
   const [companies, setCompanies] = useState([]);
@@ -26,11 +23,10 @@ const Home = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('/api/companies');
+      const response = await axios.get(`${API_BASE_URL}/api/companies`);
       setCompanies(response.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
-      // Set empty array to prevent "not iterable" error
       setCompanies([]);
     } finally {
       setLoading(false);
@@ -38,7 +34,6 @@ const Home = () => {
   };
 
   const applyFilters = () => {
-    // Ensure companies is always an array
     let filtered = Array.isArray(companies) ? [...companies] : [];
 
     // Search filter

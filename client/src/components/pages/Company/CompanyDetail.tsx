@@ -1,68 +1,121 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
-
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import {
-  ArrowLeft,
-  Building,
-  MapPin,
-  Star,
-} from 'lucide-react';
+import { ArrowLeft, Building, MapPin, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
-import {
-  Link,
-  useParams,
-} from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import AverageRating from '../../components/AverageRating';
 import ReviewCard from '../../components/ReviewCard';
 import ReviewForm from '../../components/ReviewForm';
 import { useAuth } from '../../context/AuthContext';
 
-const CompanyDetail = () => {
-  const { id } = useParams();
+// Proper interfaces
+interface CompanyType {
+  id: string;
+  name: string;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  userId: string;
+  user?: User;
+  isReported?: boolean;
+  createdAt?: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
+  description?: string;
+  address?: string;
+  imageUrl?: string;
+  phoneNumber?: string;
+  email?: string;
+  type?: CompanyType;
+  Reviews?: Review[];
+  reviews?: Review[];
+}
+
+// Axios error type
+interface AxiosError {
+  response?: {
+    status: number;
+    data: unknown;
+  };
+  code?: string;
+  message: string;
+}
+
+const CompanyDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [company, setCompany] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingReview, setEditingReview] = useState(null);
-  const [userReview, setUserReview] = useState(null);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [userReview, setUserReview] = useState<Review | null>(null);
 
   useEffect(() => {
-    fetchCompanyData();
-  }, [id]);
+    if (id) {
+      fetchCompanyData();
+    }
+  }, [id, user]);
 
-  const fetchCompanyData = async () => {
+  const fetchCompanyData = async (): Promise<void> => {
     try {
-      const response = await axios.get(`/api/companies/${id}`);
-      setCompany(response.data);
-      const reviewsData = response.data.Reviews || response.data.reviews || [];
+      setLoading(true);
+      const response = await axios.get<Company>(`/api/companies/${id}`);
+      const companyData = response.data;
+      
+      setCompany(companyData);
+      
+      // Handle different possible review structures from backend
+      const reviewsData = companyData.Reviews || companyData.reviews || [];
       setReviews(reviewsData);
       
       // Find user's existing review
-      if (user) {
+      if (user && user.id) {
         const existingReview = reviewsData.find(
-          review => review.userId === user.id
+          (review: Review) => review.userId === user.id
         );
         setUserReview(existingReview || null);
       }
-    } catch (error) {
-      console.error('Error fetching company:', error);
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      console.error('Error fetching company:', axiosError);
+      
+      if (axiosError.response?.status === 404) {
         toast.error('Company not found');
-      } else {
+      } else if (axiosError.response?.status === 500) {
+        toast.error('Server error. Please try again later.');
+      } else if (axiosError.code === 'NETWORK_ERROR' || axiosError.message?.includes('Network Error')) {
         console.log('Backend not connected - showing offline state');
-        setCompany(null);
-        setReviews([]);
+        toast.error('Cannot connect to server. Showing offline data.');
+      } else {
+        toast.error('Failed to load company details');
       }
+      
+      setCompany(null);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReviewSubmit = (newReview) => {
+  const handleReviewSubmit = (newReview: Review): void => {
+    if (!user) {
+      toast.error('You must be logged in to submit a review');
+      return;
+    }
+
     // Check if user already has a review to prevent duplicates
     if (!editingReview && userReview) {
       toast.error('You have already reviewed this company. You can edit your existing review.');
@@ -76,33 +129,59 @@ const CompanyDetail = () => {
       ));
       setUserReview(newReview);
       setEditingReview(null);
+      toast.success('Review updated successfully');
     } else {
-      // Add new review
-      const reviewWithUser = {
+      // Add new review with proper user data
+      const reviewWithUser: Review = {
         ...newReview,
-        user: { id: user.id, name: user.name }
+        id: `temp-${Date.now()}`, // Temporary ID for frontend
+        user: {
+          id: user.id,
+          name: user.name || 'Anonymous',
+          email: user.email || ''
+        },
+        userId: user.id,
+        createdAt: new Date().toISOString()
       };
       setReviews([reviewWithUser, ...reviews]);
       setUserReview(reviewWithUser);
+      toast.success('Review submitted successfully');
     }
-    fetchCompanyData(); // Refresh to get updated averages
+    
+    // Refresh to get updated averages from backend
+    fetchCompanyData();
   };
 
-  const handleEditReview = (review) => {
+  const handleEditReview = (review: Review): void => {
     setEditingReview(review);
   };
 
-  const handleDeleteReview = (reviewId) => {
+  const handleDeleteReview = (reviewId: string): void => {
     setReviews(reviews.filter(review => review.id !== reviewId));
     if (userReview?.id === reviewId) {
       setUserReview(null);
     }
+    toast.success('Review deleted successfully');
   };
 
-  const handleReportReview = (reviewId) => {
+  const handleReportReview = (reviewId: string): void => {
     setReviews(reviews.map(review =>
       review.id === reviewId ? { ...review, isReported: true } : review
     ));
+    toast.success('Review reported successfully');
+  };
+
+  // Helper function to get proper image URL
+  const getImageUrl = (imageUrl?: string): string | null => {
+    if (!imageUrl) return null;
+    
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    // If it's a relative path, prepend the backend URL
+    return `http://localhost:5173${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   if (loading) {
@@ -161,9 +240,13 @@ const CompanyDetail = () => {
           <div className="h-64 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 relative">
             {company.imageUrl ? (
               <img
-                src={company.imageUrl}
+                src={getImageUrl(company.imageUrl) || ''}
                 alt={company.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -180,13 +263,11 @@ const CompanyDetail = () => {
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   {company.name}
                 </h1>
-                <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-400">
-                  {company.type && (
-                    <span className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
-                      <Building className="h-4 w-4 mr-1" />
-                      {company.type.name}
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-400 mb-4">
+                  <span className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
+                    <Building className="h-4 w-4 mr-1" />
+                    {company.type?.name || 'Not specified'}
+                  </span>
                   {company.address && (
                     <span className="inline-flex items-center text-sm">
                       <MapPin className="h-4 w-4 mr-1" />
@@ -194,13 +275,32 @@ const CompanyDetail = () => {
                     </span>
                   )}
                 </div>
+
+                {/* Additional Company Details */}
+                <div className="space-y-2">
+                  {company.description && (
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">Description:</span> {company.description}
+                    </div>
+                  )}
+                  {company.phoneNumber && (
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">📞 Phone:</span> {company.phoneNumber}
+                    </div>
+                  )}
+                  {company.email && (
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">✉️ Email:</span> <a href={`mailto:${company.email}`} className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">{company.email}</a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="text-center sm:text-right">
-                <AverageRating 
-                  rating={averageRating} 
-                  reviewCount={reviews.length} 
-                  size="lg" 
+                <AverageRating
+                  rating={averageRating}
+                  reviewCount={reviews.length}
+                  size="lg"
                 />
               </div>
             </div>

@@ -19,7 +19,7 @@ const passport = require('./utils/passport'); // ← This calls passport.use(...
 
 // ✅ Step 3: Set up Express
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5173;
 
 app.use(cors({
   origin: process.env.CLIENT_URL,

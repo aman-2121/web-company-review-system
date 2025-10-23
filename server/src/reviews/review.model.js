@@ -33,7 +33,7 @@ module.exports = (sequelize) => {
     },
     comment: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
     },
     isAnonymous: {           // <-- new column
       type: DataTypes.BOOLEAN,

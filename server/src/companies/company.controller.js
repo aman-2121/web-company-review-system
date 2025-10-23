@@ -30,7 +30,7 @@ exports.getAllCompanies = async (req, res) => {
       const ratings = company.Reviews.map(r => r.rating);
       const avg = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
       return {
-        ...company.get(),
+        ...company.toJSON(),
         averageRating: parseFloat(avg.toFixed(1)),
       };
     });
@@ -45,6 +45,7 @@ exports.getAllCompanies = async (req, res) => {
 exports.getCompanyById = async (req, res) => {
   try {
     const company = await Company.findByPk(req.params.id, {
+      attributes: ['id', 'name', 'address', 'typeId', 'imageUrl', 'description', 'phoneNumber', 'email', 'isApproved', 'createdAt', 'updatedAt'],
       include: [
         { model: Type, as: 'type' },
         {
@@ -68,7 +69,35 @@ exports.getCompanyById = async (req, res) => {
 
 // server/src/companies/company.controller.js
 exports.createCompany = async (req, res) => {
-  const { name, address, typeId } = req.body;
+  const { name, address, typeId, description, phoneNumber, email } = req.body;
+
+  // Validation
+  if (!name || !name.trim()) {
+    return res.status(400).json({ message: 'Company name is required' });
+  }
+  if (!address || !address.trim()) {
+    return res.status(400).json({ message: 'Company address is required' });
+  }
+  if (!typeId || isNaN(parseInt(typeId))) {
+    return res.status(400).json({ message: 'Valid company type is required' });
+  }
+
+  // Phone number validation (optional but must be valid format if provided)
+  if (phoneNumber && phoneNumber.trim()) {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(phoneNumber.trim())) {
+      return res.status(400).json({ message: 'Invalid phone number format' });
+    }
+  }
+
+  // Email validation (optional but must be valid format if provided)
+  if (email && email.trim()) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+  }
+
   let imageUrl = null;
 
   // Handle image upload
@@ -81,16 +110,19 @@ exports.createCompany = async (req, res) => {
     const isApproved = req.user.role === 'admin';
 
     const company = await Company.create({
-      name,
-      address,
-      typeId,
+      name: name.trim(),
+      address: address.trim(),
+      typeId: parseInt(typeId),
       imageUrl,
+      description: description ? description.trim() : null,
+      phoneNumber: phoneNumber ? phoneNumber.trim() : null,
+      email: email ? email.trim() : null,
       isApproved, // ✅ true if admin, false if regular user
     });
 
     res.status(201).json({
-      message: isApproved 
-        ? 'Company created and published!' 
+      message: isApproved
+        ? 'Company created and published!'
         : 'Company submitted for admin approval.',
       company,
     });
@@ -98,42 +130,37 @@ exports.createCompany = async (req, res) => {
     console.error('Create company error:', err);
     res.status(500).json({ message: 'Server error' });
   }
-};// server/src/companies/company.controller.js
-exports.createCompany = async (req, res) => {
-  const { name, address, typeId } = req.body;
-  let imageUrl = null;
-
-  // Handle image upload
-  if (req.file) {
-    imageUrl = `/uploads/${req.file.filename}`;
-  }
-
-  try {
-    // 🔑 Key logic: Only admins auto-approve
-    const isApproved = req.user.role === 'admin';
-
-    const company = await Company.create({
-      name,
-      address,
-      typeId,
-      imageUrl,
-      isApproved, // ✅ true if admin, false if regular user
-    });
-
-    res.status(201).json({
-      message: isApproved 
-        ? 'Company created and published!' 
-        : 'Company submitted for admin approval.',
-      company,
-    });
-  } catch (err) {
-    console.error('Create company error:', err);
-    res.status(500).json({ message: 'Server error in create company' });
-  }
 };
 
 exports.updateCompany = async (req, res) => {
-  const { name, address, typeId, imageUrl, isApproved } = req.body;
+  const { name, address, typeId, imageUrl, isApproved, description, phoneNumber, email } = req.body;
+
+  // Validation
+  if (!name || !name.trim()) {
+    return res.status(400).json({ message: 'Company name is required' });
+  }
+  if (!address || !address.trim()) {
+    return res.status(400).json({ message: 'Company address is required' });
+  }
+  if (!typeId || isNaN(parseInt(typeId))) {
+    return res.status(400).json({ message: 'Valid company type is required' });
+  }
+
+  // Phone number validation (optional but must be valid format if provided)
+  if (phoneNumber && phoneNumber.trim()) {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(phoneNumber.trim())) {
+      return res.status(400).json({ message: 'Invalid phone number format' });
+    }
+  }
+
+  // Email validation (optional but must be valid format if provided)
+  if (email && email.trim()) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+  }
 
   try {
     const company = await Company.findByPk(req.params.id);
@@ -142,10 +169,13 @@ exports.updateCompany = async (req, res) => {
     const type = await Type.findByPk(typeId);
     if (!type) return res.status(400).json({ message: 'Invalid type' });
 
-    company.name = name;
-    company.address = address;
-    company.typeId = typeId;
+    company.name = name.trim();
+    company.address = address.trim();
+    company.typeId = parseInt(typeId);
     company.imageUrl = imageUrl;
+    company.description = description ? description.trim() : null;
+    company.phoneNumber = phoneNumber ? phoneNumber.trim() : null;
+    company.email = email ? email.trim() : null;
     if (req.user.role.name === 'admin') {
       company.isApproved = isApproved !== undefined ? isApproved : company.isApproved;
     }
