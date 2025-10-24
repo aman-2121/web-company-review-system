@@ -15,6 +15,19 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
   const [companyData, setCompanyData] = useState(company);
   const [loading, setLoading] = useState(false);
 
+  // ✅ ADD THE getImageUrl FUNCTION HERE
+  const getImageUrl = (imageUrl?: string): string | null => {
+    if (!imageUrl) return null;
+    
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    // If it's a relative path, prepend the backend URL
+    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
   // Function to fetch complete company data
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -38,7 +51,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
     };
 
     fetchCompanyData();
-  }, [company.id]); // Only re-run if company ID changes
+  }, [company.id]);
 
   // Use the fetched data or fallback to original company data
   const displayCompany = companyData || company;
@@ -74,9 +87,14 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
         <div className="aspect-w-16 aspect-h-9 bg-gray-200 dark:bg-gray-700">
           {displayCompany.imageUrl ? (
             <img
-               src={`http://localhost:5173${displayCompany.imageUrl.startsWith('/') ? '' : '/'}${displayCompany.imageUrl}`}
+              // ✅ USE THE FUNCTION HERE
+              src={getImageUrl(displayCompany.imageUrl) || ''}
               alt={displayCompany.name}
               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                // Fallback if image fails to load
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600">
@@ -92,9 +110,9 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
               {displayCompany.name}
             </h3>
             {displayCompany.type && (
-                                  <span className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
-                                    {displayCompany.type.name}
-                                  </span>
+              <span className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
+                {displayCompany.type.name}
+              </span>
             )}
           </div>
 

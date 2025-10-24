@@ -1,5 +1,4 @@
-// server/src/users/user.model.js
-
+// server/src/models/user.model.js
 module.exports = (sequelize) => {
   const { DataTypes } = require('sequelize');
 
@@ -20,7 +19,7 @@ module.exports = (sequelize) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: true, 
+      allowNull: true,
     },
     role: {
       type: DataTypes.STRING,
@@ -32,6 +31,18 @@ module.exports = (sequelize) => {
       unique: true,
       allowNull: true,
     },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    verificationToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    verificationSentAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    }
   });
 
   // Hash password before creating user
@@ -43,7 +54,6 @@ module.exports = (sequelize) => {
     }
   });
 
-  // Add instance method to compare passwords
   User.prototype.comparePassword = async function (password) {
     const bcrypt = require('bcrypt');
     return await bcrypt.compare(password, this.password);

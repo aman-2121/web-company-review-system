@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Eye, EyeOff, Building2, User, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Building2, User, Mail, Lock, CheckCircle, XCircle } from 'lucide-react';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,9 +14,75 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [emailStatus, setEmailStatus] = useState<'valid' | 'invalid' | null>(null);
 
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // ✅ REAL EMAIL VALIDATION
+  const validateRealEmail = (email) => {
+    if (!email) return false;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return false;
+
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (!domain) return false;
+
+    // Block major disposable email domains
+    const disposableDomains = [
+      'tempmail.com', '10minutemail.com', 'guerrillamail.com', 'mailinator.com',
+      'yopmail.com', 'throwawaymail.com', 'fakeinbox.com', 'temp-mail.org',
+      'trashmail.com', 'getairmail.com', 'mohmal.com', 'dispostable.com',
+      'example.com', 'test.com', 'fake.com', 'localhost.com', 'domain.com',
+      'email.com', 'mail.com', 'test.org', 'example.org', 'test.net',
+      'mailinator.org', 'yopmail.fr', 'yopmail.net', 'trashmail.net',
+      'dispostable.com', 'jetable.org', 'mailcatch.com', 'tempinbox.com',
+      '33mail.com', 'anonbox.net', 'boximail.com', 'discard.email',
+      'disposable-email.ml', 'dodsi.com', 'mailmetrash.com', 'mailmoat.com',
+      'mintemail.com', 'mytrashmail.com', 'nwytg.com', 'objectmail.com'
+    ];
+
+    if (disposableDomains.some(disposable => domain === disposable || domain.includes(disposable))) {
+      return false;
+    }
+
+    // Check for valid TLDs
+    const validTLDs = [
+      'com', 'org', 'net', 'edu', 'gov', 'io', 'co', 'info', 'biz', 'me',
+      'uk', 'ca', 'au', 'de', 'fr', 'it', 'es', 'nl', 'se', 'no', 'dk',
+      'fi', 'ie', 'pt', 'be', 'ch', 'at', 'jp', 'cn', 'in', 'br', 'ru',
+      'za', 'mx', 'ar', 'cl', 'pe', 'nz', 'sg', 'hk', 'my', 'th'
+    ];
+    
+    const tld = domain.split('.').pop();
+    if (!tld || !validTLDs.includes(tld.toLowerCase())) {
+      return false;
+    }
+
+    // Check for fake patterns
+    const localPart = email.split('@')[0].toLowerCase();
+    const fakePatterns = ['test', 'fake', 'demo', 'admin', 'user', 'temp', 'dummy', 'example'];
+    if (fakePatterns.includes(localPart)) return false;
+
+    return true;
+  };
+
+  const handleEmailChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, email: value }));
+    
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+
+    if (value) {
+      const isValid = validateRealEmail(value);
+      setEmailStatus(isValid ? 'valid' : 'invalid');
+    } else {
+      setEmailStatus(null);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,7 +90,7 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
+    
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -36,24 +102,32 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.length < 2) {
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full name is required';
+    } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
+    } else if (formData.name.trim().length > 50) {
+      newErrors.name = 'Name cannot exceed 50 characters';
     }
 
-    if (!formData.email) {
+    // Email validation
+    if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+    } else if (emailStatus === 'invalid') {
+      newErrors.email = 'Please enter a valid email from a real provider (Gmail, Outlook, Yahoo, etc.)';
     }
 
+    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain uppercase, lowercase letters and numbers';
     }
 
+    // Confirm password
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
@@ -70,34 +144,46 @@ const Register = () => {
     if (!validateForm()) return;
 
     setLoading(true);
-    const result = await register(formData.name, formData.email, formData.password);
+    setErrors({});
     
-    if (result.success) {
-      // Redirect admin users to admin dashboard, regular users to home
-      if (result.user?.role === 'admin') {
-        navigate('/admin/dashboard', { replace: true });
+    try {
+      const result = await register(formData.name, formData.email, formData.password);
+      
+      if (result.success) {
+        if (result.user?.role === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
-        navigate('/', { replace: true });
+        if (result.message?.includes('email')) {
+          setErrors({ email: result.message });
+        } else {
+          setErrors({ general: result.message });
+        }
       }
-    } else {
-      if (result.message.includes('email')) {
-        setErrors({ email: result.message });
-      } else {
-        setErrors({ general: result.message });
-      }
+    } catch (error) {
+      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3001/auth/google';
+    window.location.href = 'http://localhost:5000/auth/google';
+  };
+
+  const getEmailIcon = () => {
+    if (!formData.email) return null;
+    return emailStatus === 'valid' ? 
+      <CheckCircle className="h-5 w-5 text-green-500" /> : 
+      <XCircle className="h-5 w-5 text-red-500" />;
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <Building2 className="h-12 w-12 text-blue-500 dark:text-blue-400" />
@@ -110,11 +196,10 @@ const Register = () => {
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {errors.general && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                <p className="text-sm text-red-600 dark:text-red-400">{errors.general}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 text-center">{errors.general}</p>
               </div>
             )}
 
@@ -129,10 +214,12 @@ const Register = () => {
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                     errors.name ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Enter your full name"
+                  disabled={loading}
+                  maxLength={50}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
@@ -141,6 +228,10 @@ const Register = () => {
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
               )}
+              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 flex justify-between">
+                <span>2-50 characters</span>
+                <span>{formData.name.length}/50</span>
+              </div>
             </div>
 
             <div>
@@ -153,18 +244,30 @@ const Register = () => {
                   name="email"
                   type="email"
                   value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  onChange={handleEmailChange}
+                  className={`w-full pl-10 pr-10 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    errors.email ? 'border-red-300 dark:border-red-600' : 
+                    emailStatus === 'valid' ? 'border-green-300 dark:border-green-600' :
+                    emailStatus === 'invalid' ? 'border-red-300 dark:border-red-600' :
+                    'border-gray-300 dark:border-gray-600'
                   }`}
-                  placeholder="Enter your email"
+                  placeholder="Enter your real email address"
+                  disabled={loading}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  {getEmailIcon()}
+                </div>
               </div>
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+              )}
+              {emailStatus === 'valid' && (
+                <p className="mt-1 text-sm text-green-600 dark:text-green-400">
+                  ✓ Valid email address
+                </p>
               )}
             </div>
 
@@ -179,10 +282,11 @@ const Register = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-10 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full pl-10 pr-10 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                     errors.password ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
-                  placeholder="Create a password"
+                  placeholder="Create a strong password"
+                  disabled={loading}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
@@ -190,7 +294,8 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -198,6 +303,9 @@ const Register = () => {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
               )}
+              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                • 8+ characters • Uppercase & lowercase • Numbers
+              </div>
             </div>
 
             <div>
@@ -211,10 +319,11 @@ const Register = () => {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-10 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full pl-10 pr-10 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                     errors.confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Confirm your password"
+                  disabled={loading}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
@@ -222,7 +331,8 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  disabled={loading}
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -234,10 +344,17 @@ const Register = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={loading || emailStatus === 'invalid'}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating account...
+                </div>
+              ) : (
+                'Create Account'
+              )}
             </button>
 
             <div className="relative">
@@ -254,7 +371,8 @@ const Register = () => {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+              disabled={loading}
+              className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -271,7 +389,7 @@ const Register = () => {
               Already have an account?{' '}
               <Link 
                 to="/login" 
-                className="font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                className="font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
               >
                 Sign in
               </Link>
