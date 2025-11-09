@@ -1,24 +1,8 @@
-# Fix Server Error During Registration
+# TODO: Restrict Registration to Google Accounts Only
 
-## Debugging Steps
-- [x] Add comprehensive error handling and logging to user.controller.js register method
-- [ ] Test registration with various inputs to identify the exact error point
-- [ ] Check server logs for detailed error messages
-- [ ] Verify database connection and User model
-- [ ] Test email verification service
-- [ ] Test email sending functionality
-
-## Potential Issues to Check
-- [ ] Database connection issues
-- [ ] Email verification service failures
-- [ ] User creation failures
-- [ ] Email sending failures
-- [ ] Environment variables (JWT_SECRET, EMAIL_USER, EMAIL_PASS, etc.)
-- [ ] Sequelize model synchronization
-
-## Testing
-- [ ] Test with valid email and password
-- [ ] Test with invalid email formats
-- [ ] Test with disposable emails
-- [ ] Test with existing user emails
-- [ ] Test email sending (check SMTP credentials)
+## Tasks
+- [x] Update `googleAccountVerification.js` to allow only Google domains (gmail.com, googlemail.com, google.com)
+- [x] Update error messages to indicate only Google accounts are allowed
+- [x] Test registration with valid Google email
+- [x] Test registration with non-Google email to ensure it's blocked
+- [x] Verify verification email is sent and user can verify account
