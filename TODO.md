@@ -1,24 +1,8 @@
-# Forgot Password Functionality Testing
+# TODO: Restrict Registration to Google Accounts Only
 
-## Completed
-- [x] Analyze existing codebase - functionality is fully implemented
-- [x] Verify email configuration in .env file
-
-## Remaining Tests
-- [ ] Start server and client applications
-- [ ] Test forgot password flow:
-  - Navigate to login page
-  - Click "Forgot your password?" link
-  - Enter email and submit
-  - Verify 4-digit code is sent to email
-  - Enter code in reset password page
-  - Set new password without old password
-  - Verify password reset works
-- [ ] Test edge cases:
-  - Invalid email format
-  - Non-existent email
-  - Expired reset code
-  - Invalid reset code
-- [ ] Verify security features:
-  - Code expiration (15 minutes)
-  - Email verification against registration email
+## Tasks
+- [x] Update `googleAccountVerification.js` to allow only Google domains (gmail.com, googlemail.com, google.com)
+- [x] Update error messages to indicate only Google accounts are allowed
+- [x] Test registration with valid Google email
+- [x] Test registration with non-Google email to ensure it's blocked
+- [x] Verify verification email is sent and user can verify account
