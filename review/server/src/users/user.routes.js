@@ -5,18 +5,18 @@ const jwt = require('jsonwebtoken');
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 
-const { register, login, logout, getCurrentUser, forgotPassword, verifyResetCode, resetPassword, changePassword, addAdmin } = require('./user.controller');
+const { register, login, logout, getCurrentUser, forgotPassword, verifyResetCode, resetPassword, changePassword, getAllAdmins, addAdmin } = require('./user.controller');
 
 router.post('/register', register);
 router.post('/login', passport.authenticate('local'), login);
 
 // ✅ FIXED Google OAuth routes
-router.get('/google', passport.authenticate('google', { 
+router.get('/auth/google', passport.authenticate('google', { 
   scope: ['profile', 'email'],
   session: false 
 }));
 
-router.get('/google/callback',
+router.get('/auth/google/callback',
   passport.authenticate('google', { 
     failureRedirect: process.env.CLIENT_URL + '/login?error=google_auth_failed',
     session: false 
@@ -53,8 +53,11 @@ router.post('/reset-password', resetPassword);
 // Change password route (requires authentication)
 router.post('/change-password', protect, changePassword);
 
-// Admin routes
+// Add admin route (admin only)
 router.post('/admin/add-admin', protect, authorize('admin'), addAdmin);
+
+// Get all admins route (admin only)
+router.get('/admin/admins', protect, authorize('admin'), getAllAdmins);
 
 // Auth check route
 router.get('/auth-check', (req, res) => {

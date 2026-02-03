@@ -19,7 +19,7 @@ const passport = require('./utils/passport'); // ← This calls passport.use(...
 
 // ✅ Step 3: Set up Express
 const app = express();
-const PORT = process.env.PORT || 5173;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: process.env.CLIENT_URL,
@@ -43,10 +43,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Step 5: Routes
-app.use('/auth', require('./users/user.routes'));
+const userRoutes = require('./users/user.routes');
+app.use('/api', userRoutes);
+app.use('/', userRoutes); // Catch-all for routes that might miss /api (like OAuth callbacks)
 app.use('/api/companies', require('./companies/company.routes'));
 app.use('/api/reviews', require('./reviews/review.routes'));
-app.use('/api/types', require('./types/types.routes')); 
+app.use('/api/types', require('./types/types.routes'));
 
 
 // ✅ DB Sync & Start Server

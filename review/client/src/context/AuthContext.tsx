@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Configure axios defaults
-  axios.defaults.baseURL = 'http://localhost:5000';
+  axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   axios.defaults.withCredentials = true;
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/auth/me');
+      const response = await axios.get('/api/me');
       setUser(response.data.user);
     } catch (error) {
       setUser(null);
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post('/api/login', { email, password });
       setUser(response.data.user);
       toast.success('Successfully logged in!');
       return { success: true, user: response.data.user };
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     try {
-      const response = await axios.post('/auth/register', { name, email, password });
+      const response = await axios.post('/api/register', { name, email, password });
       setUser(response.data.user);
       toast.success('Account created successfully!');
       return { success: true, user: response.data.user };
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post('/auth/logout');
+      await axios.post('/api/logout');
       setUser(null);
       toast.success('Logged out successfully');
     } catch (error) {

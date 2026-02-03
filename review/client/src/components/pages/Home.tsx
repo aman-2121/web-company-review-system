@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
+import SearchFilterBar from '../SearchFilterBar';
+import CompanyCard from '../CompanyCard';
 import { Building2 } from 'lucide-react';
-import CompanyCard from '../components/CompanyCard';
-import SearchFilterBar from '../components/SearchFilterBar';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import axios from 'axios';
 
 const Home = () => {
   const [companies, setCompanies] = useState([]);
@@ -23,10 +21,13 @@ const Home = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/companies`);
-      setCompanies(response.data);
+      const response = await axios.get('/api/companies');
+      // Backend returns { companies: [...], total: number }
+      const companiesData = response.data.companies || [];
+      setCompanies(companiesData);
     } catch (error) {
       console.error('Error fetching companies:', error);
+      // Set empty array to prevent "not iterable" error
       setCompanies([]);
     } finally {
       setLoading(false);
@@ -34,6 +35,7 @@ const Home = () => {
   };
 
   const applyFilters = () => {
+    // Ensure companies is always an array
     let filtered = Array.isArray(companies) ? [...companies] : [];
 
     // Search filter
@@ -45,7 +47,7 @@ const Home = () => {
 
     // Type filter
     if (filters.type) {
-      filtered = filtered.filter(company => 
+      filtered = filtered.filter(company =>
         company.typeId === parseInt(filters.type)
       );
     }
@@ -54,8 +56,9 @@ const Home = () => {
     if (filters.rating) {
       const minRating = parseInt(filters.rating);
       filtered = filtered.filter(company => {
-        if (!company.reviews || company.reviews.length === 0) return false;
-        const avgRating = company.reviews.reduce((sum, review) => sum + review.rating, 0) / company.reviews.length;
+        const reviews = company.Reviews || company.reviews || [];
+        if (!reviews || reviews.length === 0) return false;
+        const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
         return avgRating >= minRating;
       });
     }
@@ -87,18 +90,18 @@ const Home = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:text-white mb-4">
             Company Reviews
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-700 dark:text-gray-400 max-w-2xl mx-auto font-medium">
             Discover what employees really think about their companies. Read authentic reviews and make informed career decisions.
           </p>
         </div>
 
         {/* Search and Filters */}
-        <SearchFilterBar 
-          onSearch={handleSearch} 
-          onFilter={handleFilter} 
+        <SearchFilterBar
+          onSearch={handleSearch}
+          onFilter={handleFilter}
         />
 
         {/* Results Count */}
@@ -123,8 +126,8 @@ const Home = () => {
               No companies found
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              {searchTerm || filters.type || filters.rating 
-                ? 'Try adjusting your search or filters' 
+              {searchTerm || filters.type || filters.rating
+                ? 'Try adjusting your search or filters'
                 : 'No companies have been added yet'}
             </p>
           </div>

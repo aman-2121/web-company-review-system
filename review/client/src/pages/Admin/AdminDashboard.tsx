@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 // Interface definitions
 interface CompanyType {
@@ -45,8 +46,15 @@ interface Company {
   isApproved?: boolean;
 }
 
+interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 const AdminDashboard = () => {
-  const [companies, setCompanies] = useState<Company[]>([]); 
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [pendingCompanies, setPendingCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('approved');
@@ -65,6 +73,7 @@ const AdminDashboard = () => {
   const [newType, setNewType] = useState({ name: '' });
   const [editingType, setEditingType] = useState<CompanyType | null>(null);
   const [showEditTypeModal, setShowEditTypeModal] = useState(false);
+  const [admins, setAdmins] = useState<Admin[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -72,15 +81,17 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [companiesRes, pendingRes, typesRes] = await Promise.all([
+      const [companiesRes, pendingRes, typesRes, adminsRes] = await Promise.all([
         axios.get('/api/companies').catch(() => ({ data: { companies: [] } })),
         axios.get('/api/companies/pending').catch(() => ({ data: [] })),
-        axios.get('/api/types').catch(() => ({ data: [] }))
+        axios.get('/api/types').catch(() => ({ data: [] })),
+        axios.get('/api/admin/admins', { withCredentials: true }).catch(() => ({ data: [] }))
       ]);
 
       setCompanies(companiesRes.data?.companies || []);
       setPendingCompanies(Array.isArray(pendingRes.data) ? pendingRes.data : []);
       setTypes(typesRes.data || []);
+      setAdmins(adminsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load dashboard data');
@@ -146,14 +157,14 @@ const AdminDashboard = () => {
       setShowAddModal(false);
 
       // Reset form
-      setNewCompany({ 
-        name: '', 
-        address: '', 
-        typeId: '', 
-        imageUrl: '', 
-        description: '', 
-        phoneNumber: '', 
-        email: '' 
+      setNewCompany({
+        name: '',
+        address: '',
+        typeId: '',
+        imageUrl: '',
+        description: '',
+        phoneNumber: '',
+        email: ''
       });
 
       // Refresh company list
@@ -209,7 +220,7 @@ const AdminDashboard = () => {
       const reviews = company.Reviews || company.reviews || [];
       const reviewCount = reviews.length;
       if (reviewCount === 0) return 'N/A';
-      
+
       const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
       return (totalRating / reviewCount).toFixed(1);
     };
@@ -481,7 +492,7 @@ const AdminDashboard = () => {
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <Link 
+            <Link
               to="/admin/reports"
               className="flex items-center hover:bg-gray-50 dark:hover:bg-gray-700 p-2 -m-2 rounded-lg transition-colors"
             >
@@ -523,31 +534,28 @@ const AdminDashboard = () => {
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('approved')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'approved'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'approved'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
             >
               Approved Companies ({companies.length})
             </button>
             <button
               onClick={() => setActiveTab('pending')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'pending'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'pending'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
             >
               Pending Approval ({pendingCompanies.length})
             </button>
             <button
               onClick={() => setActiveTab('types')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'types'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'types'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
             >
               Types ({types.length})
             </button>
@@ -578,12 +586,12 @@ const AdminDashboard = () => {
                   <input
                     type="text"
                     value={newCompany.name}
-                    onChange={(e) => setNewCompany({...newCompany, name: e.target.value})}
+                    onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Address
@@ -591,7 +599,7 @@ const AdminDashboard = () => {
                   <input
                     type="text"
                     value={newCompany.address}
-                    onChange={(e) => setNewCompany({...newCompany, address: e.target.value})}
+                    onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -602,7 +610,7 @@ const AdminDashboard = () => {
                   </label>
                   <select
                     value={newCompany.typeId}
-                    onChange={(e) => setNewCompany({...newCompany, typeId: e.target.value})}
+                    onChange={(e) => setNewCompany({ ...newCompany, typeId: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
@@ -621,7 +629,7 @@ const AdminDashboard = () => {
                   </label>
                   <textarea
                     value={newCompany.description}
-                    onChange={(e) => setNewCompany({...newCompany, description: e.target.value})}
+                    onChange={(e) => setNewCompany({ ...newCompany, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                     placeholder="Company description..."
@@ -635,7 +643,7 @@ const AdminDashboard = () => {
                   <input
                     type="tel"
                     value={newCompany.phoneNumber}
-                    onChange={(e) => setNewCompany({...newCompany, phoneNumber: e.target.value})}
+                    onChange={(e) => setNewCompany({ ...newCompany, phoneNumber: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., +1 (555) 123-4567"
                   />
@@ -648,7 +656,7 @@ const AdminDashboard = () => {
                   <input
                     type="email"
                     value={newCompany.email}
-                    onChange={(e) => setNewCompany({...newCompany, email: e.target.value})}
+                    onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="company@example.com"
                     required
@@ -705,7 +713,7 @@ const AdminDashboard = () => {
                   <input
                     type="text"
                     value={newType.name}
-                    onChange={(e) => setNewType({...newType, name: e.target.value})}
+                    onChange={(e) => setNewType({ ...newType, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Technology, Healthcare, Finance"
                     required
@@ -747,7 +755,7 @@ const AdminDashboard = () => {
                   <input
                     type="text"
                     value={editingType.name}
-                    onChange={(e) => setEditingType({...editingType, name: e.target.value})}
+                    onChange={(e) => setEditingType({ ...editingType, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., Technology, Healthcare, Finance"
                     required

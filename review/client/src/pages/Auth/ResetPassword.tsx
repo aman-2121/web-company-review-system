@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Building2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
@@ -38,7 +39,7 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/verify-reset-code`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'} /api/verify - reset - code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/reset-password`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'} /api/reset - password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

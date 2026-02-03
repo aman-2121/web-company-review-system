@@ -91,12 +91,9 @@ exports.deleteType = async (req, res) => {
       return res.status(404).json({ message: 'Type not found' });
     }
 
-    // Check if type is being used by any companies
+    // Reassign companies using this type to null (unassigned)
     const { Company } = require('../models');
-    const companiesCount = await Company.count({ where: { typeId: id } });
-    if (companiesCount > 0) {
-      return res.status(400).json({ message: 'Cannot delete type that is assigned to companies' });
-    }
+    await Company.update({ typeId: null }, { where: { typeId: id } });
 
     await type.destroy();
     res.json({ message: 'Type deleted successfully' });

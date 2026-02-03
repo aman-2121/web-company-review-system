@@ -433,20 +433,49 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+exports.getAllAdmins = async (req, res) => {
+  try {
+    // Check if current user is admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    // Get all users with role 'admin'
+    const admins = await User.findAll({
+      where: { role: 'admin' },
+      attributes: ['id', 'name', 'email', 'role', 'createdAt'],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      admins: admins
+    });
+  } catch (err) {
+    console.error('Get all admins error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching admins'
+    });
+  }
+};
+
 exports.addAdmin = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // ✅ STRONG EMAIL VALIDATION
-    const emailValidation = await EmailValidator.validateEmailForRegistration(email);
-    if (!emailValidation.valid) {
-      return res.status(400).json({
+    // Check if current user is admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
         success: false,
-        message: emailValidation.message
+        message: 'Access denied. Admin privileges required.'
       });
     }
 
-    // ✅ VALIDATE NAME
+    // Validate inputs
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -468,7 +497,20 @@ exports.addAdmin = async (req, res) => {
       });
     }
 
-    // ✅ STRONG PASSWORD VALIDATION
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email'
+      });
+    }
+
     if (!password) {
       return res.status(400).json({
         success: false,
@@ -520,23 +562,26 @@ exports.addAdmin = async (req, res) => {
       });
     }
 
+    // Hash password
+    const bcrypt = require('bcrypt');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create admin user
     const adminUser = await User.create({
       name: name.trim(),
-      email: email.toLowerCase(),
-      password,
-      role: 'admin',
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      role: 'admin'
     });
 
-    res.status(201).json({
+    // Return success without password
+    const { password: _, ...adminData } = adminUser.toJSON();
+
+    res.json({
       success: true,
       message: 'Admin user created successfully',
-      user: {
-        id: adminUser.id,
-        name: adminUser.name,
-        email: adminUser.email,
-        role: adminUser.role,
-      },
+      user: adminData
     });
   } catch (err) {
     console.error('Add admin error:', err);
@@ -546,3 +591,5 @@ exports.addAdmin = async (req, res) => {
     });
   }
 };
+
+

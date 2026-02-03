@@ -82,7 +82,7 @@ const AdminReportedReviews = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Link>
-          
+
           <div className="flex items-center space-x-3">
             <AlertTriangle className="h-8 w-8 text-red-500" />
             <div>
@@ -184,8 +184,8 @@ const AdminReportedReviews = () => {
 
                     {report.review?.company && (
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Review for: 
-                        <Link 
+                        Review for:
+                        <Link
                           to={`/companies/${report.review.company.id}`}
                           className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 ml-1"
                         >
@@ -204,7 +204,7 @@ const AdminReportedReviews = () => {
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Review
                     </button>
-                    
+
                     <button
                       onClick={() => handleDismissReport(report.id)}
                       className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

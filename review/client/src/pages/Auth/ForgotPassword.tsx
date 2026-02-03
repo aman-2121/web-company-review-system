@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/forgot-password`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'} /api/forgot - password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

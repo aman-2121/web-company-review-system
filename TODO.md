@@ -1,8 +1,14 @@
-# TODO: Restrict Registration to Google Accounts Only
+# Fix Critical Authentication Flow Bugs
 
-## Tasks
-- [x] Update `googleAccountVerification.js` to allow only Google domains (gmail.com, googlemail.com, google.com)
-- [x] Update error messages to indicate only Google accounts are allowed
-- [x] Test registration with valid Google email
-- [x] Test registration with non-Google email to ensure it's blocked
-- [x] Verify verification email is sent and user can verify account
+## Tasks to Complete
+
+### 1. Password Recovery Broken
+- [ ] Update ForgotPassword.tsx: Change API URL from `/auth/forgot-password` to `/api/users/forgot-password`
+- [ ] Update ChangePassword.tsx: Change API URL from `/auth/change-password` to `/api/users/change-password`
+
+### 2. Admin Management Issue
+- [ ] Update AddAdmin.tsx: Change API URL from `/api/admin/add-admin` to `/api/users/admin/add-admin`
+- [ ] Add functionality to fetch and display list of existing admins in AddAdmin.tsx
+
+### 3. Social Authentication Failure
+- [ ] Update Login.tsx: Change Google auth URL from `/api/auth/google` to `/api/users/google`

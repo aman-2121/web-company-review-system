@@ -43,7 +43,7 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     console.log('Google OAuth profile received:', profile.displayName);
-    
+
     // Check if user exists with Google ID
     let user = await User.findOne({ where: { googleId: profile.id } });
     if (user) {
@@ -69,7 +69,7 @@ passport.use(new GoogleStrategy({
       googleId: profile.id,
       role: 'user', // ✅ FIXED: Use 'role' not 'roleId'
     });
-    
+
     console.log('New user created via Google OAuth:', newUser.id);
     return done(null, newUser);
   } catch (err) {

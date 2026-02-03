@@ -32,7 +32,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [types, setTypes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [newCompany, setNewCompany] = useState({
     name: '',
     description: '',
@@ -66,7 +66,7 @@ const Navbar = () => {
     } catch (error) {
       console.error('Error fetching types:', error);
       toast.error('Failed to load types');
-    } 
+    }
   };
 
   const handleLogout = async () => {
@@ -119,7 +119,7 @@ const Navbar = () => {
         if (value instanceof File) {
           const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
           const maxSize = 5 * 1024 * 1024; // 5MB
-          
+
           if (!validTypes.includes(value.type)) {
             error = 'Please upload a valid image (JPEG, PNG, GIF, WebP)';
           } else if (value.size > maxSize) {
@@ -183,7 +183,7 @@ const Navbar = () => {
 
   const handleAddCompany = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the form errors before submitting');
       return;
@@ -199,12 +199,12 @@ const Navbar = () => {
       formData.append('phoneNumber', newCompany.phoneNumber?.trim() || '');
       formData.append('email', newCompany.email?.trim() || '');
       formData.append('typeId', newCompany.typeId);
-      
+
       if (newCompany.imageUrl instanceof File) {
         formData.append('image', newCompany.imageUrl);
       }
 
-      const response = await fetch('http://localhost:5000/api/companies', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/companies`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -218,16 +218,16 @@ const Navbar = () => {
 
       toast.success(data.message || 'Company suggestion sent successfully!');
       setShowSuggestModal(false);
-      
+
       // Reset form
-      setNewCompany({ 
-        name: '', 
-        description: '', 
-        address: '', 
-        phoneNumber: '', 
-        email: '', 
-        typeId: '', 
-        imageUrl: '' 
+      setNewCompany({
+        name: '',
+        description: '',
+        address: '',
+        phoneNumber: '',
+        email: '',
+        typeId: '',
+        imageUrl: ''
       });
       setErrors({
         name: '',
@@ -247,14 +247,14 @@ const Navbar = () => {
   };
 
   const resetForm = () => {
-    setNewCompany({ 
-      name: '', 
-      description: '', 
-      address: '', 
-      phoneNumber: '', 
-      email: '', 
-      typeId: '', 
-      imageUrl: '' 
+    setNewCompany({
+      name: '',
+      description: '',
+      address: '',
+      phoneNumber: '',
+      email: '',
+      typeId: '',
+      imageUrl: ''
     });
     setErrors({
       name: '',
@@ -306,7 +306,7 @@ const Navbar = () => {
                   Suggest Company
                 </button>
               )}
-              
+
               {isAdmin && (
                 <Link
                   to="/admin/dashboard"
@@ -357,17 +357,6 @@ const Navbar = () => {
                           )}
                         </div>
 
-                        {/* Add Admin */}
-                        {isAdmin && (
-                          <Link
-                            to="/admin/add-admin"
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            <User className="h-4 w-4" />
-                            <span>Add Admin</span>
-                          </Link>
-                        )}
 
                         {/* Change Password */}
                         <Link
@@ -475,17 +464,6 @@ const Navbar = () => {
                       </div>
                     </div>
 
-                    {/* Add Admin (Mobile) */}
-                    {isAdmin && (
-                      <Link
-                        to="/admin/add-admin"
-                        className="block w-full text-left px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg flex items-center space-x-2"
-                        onClick={() => setShowMobileMenu(false)}
-                      >
-                        <User className="h-4 w-4" />
-                        <span>Add Admin</span>
-                      </Link>
-                    )}
 
                     {/* Change Password (Mobile) */}
                     <Link
@@ -547,11 +525,10 @@ const Navbar = () => {
                   type="text"
                   value={newCompany.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.name 
-                      ? 'border-red-500 dark:border-red-400' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.name
+                    ? 'border-red-500 dark:border-red-400'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   placeholder="Enter company name"
                   required
                 />
@@ -571,11 +548,10 @@ const Navbar = () => {
                 <textarea
                   value={newCompany.description || ''}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.description 
-                      ? 'border-red-500 dark:border-red-400' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.description
+                    ? 'border-red-500 dark:border-red-400'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   placeholder="Brief description of the company..."
                   rows={3}
                   maxLength={500}
@@ -608,11 +584,10 @@ const Navbar = () => {
                   type="tel"
                   value={newCompany.phoneNumber || ''}
                   onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.phoneNumber 
-                      ? 'border-red-500 dark:border-red-400' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phoneNumber
+                    ? 'border-red-500 dark:border-red-400'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   placeholder="+1 (555) 123-4567"
                 />
                 {errors.phoneNumber && (
@@ -629,11 +604,10 @@ const Navbar = () => {
                   type="email"
                   value={newCompany.email || ''}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.email 
-                      ? 'border-red-500 dark:border-red-400' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email
+                    ? 'border-red-500 dark:border-red-400'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   placeholder="company@example.com"
                 />
                 {errors.email && (
@@ -649,11 +623,10 @@ const Navbar = () => {
                 <select
                   value={newCompany.typeId}
                   onChange={(e) => handleInputChange('typeId', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.typeId 
-                      ? 'border-red-500 dark:border-red-400' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.typeId
+                    ? 'border-red-500 dark:border-red-400'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   required
                 >
                   <option value="">Select Type</option>
@@ -677,11 +650,10 @@ const Navbar = () => {
                   type="file"
                   accept="image/jpeg, image/jpg, image/png, image/gif, image/webp"
                   onChange={handleFileChange}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.imageUrl 
-                      ? 'border-red-500 dark:border-red-400' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.imageUrl
+                    ? 'border-red-500 dark:border-red-400'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                 />
                 {errors.imageUrl ? (
                   <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.imageUrl}</p>
@@ -712,7 +684,7 @@ const Navbar = () => {
               </div>
             </form>
           </div>
-        </div> 
+        </div>
       )}
     </>
   );

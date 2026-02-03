@@ -6,7 +6,7 @@
 - [x] **Add PUT endpoint for types** - Implemented `updateType` controller function with validation
 - [x] **Add DELETE endpoint for types** - Implemented `deleteType` controller function with company usage check
 - [x] **Update routes** - Added PUT and DELETE routes in `types.routes.js` with admin authorization
-- [x] **Add validation** - Prevent deletion of types assigned to companies
+- [x] **Add validation** - Allow deletion of types by reassigning companies to unassigned (null)
 - [x] **Error handling** - Comprehensive error responses for all operations
 
 ### Frontend Admin Dashboard
