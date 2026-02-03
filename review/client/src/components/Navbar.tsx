@@ -59,6 +59,16 @@ const Navbar = () => {
     fetchData();
   }, []);
 
+  const [touched, setTouched] = useState({
+    name: false,
+    description: false,
+    address: false,
+    phoneNumber: false,
+    email: false,
+    typeId: false,
+    imageUrl: false,
+  });
+
   const fetchData = async () => {
     try {
       const typesRes = await axios.get('/api/types').catch(() => ({ data: [] }));
@@ -165,6 +175,13 @@ const Navbar = () => {
     }
   };
 
+  const handleBlur = (field) => {
+    setTouched(prev => ({
+      ...prev,
+      [field]: true
+    }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -266,6 +283,15 @@ const Navbar = () => {
       imageUrl: '',
     });
     setShowSuggestModal(false);
+    setTouched({
+      name: false,
+      description: false,
+      address: false,
+      phoneNumber: false,
+      email: false,
+      typeId: false,
+      imageUrl: false,
+    });
   };
 
   const UserAvatar = ({ user }) => (
@@ -584,8 +610,9 @@ const Navbar = () => {
                   type="tel"
                   value={newCompany.phoneNumber || ''}
                   onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phoneNumber
-                    ? 'border-red-500 dark:border-red-400'
+                  onBlur={() => handleBlur('phoneNumber')}
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${touched.phoneNumber && errors.phoneNumber
+                    ? 'border-red-500 dark:border-red-400 focus:ring-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                     }`}
                   placeholder="+1 (555) 123-4567"

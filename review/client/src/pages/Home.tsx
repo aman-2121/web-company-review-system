@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
 import { Link } from 'react-router-dom';
 import SearchFilterBar from '../components/SearchFilterBar';
 import CompanyCard from '../components/CompanyCard';
@@ -49,7 +53,7 @@ const Home = () => {
 
     // Type filter
     if (filters.type) {
-      filtered = filtered.filter(company => 
+      filtered = filtered.filter(company =>
         company.typeId === parseInt(filters.type)
       );
     }
@@ -80,8 +84,8 @@ const Home = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading companies...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading companies...</p>
         </div>
       </div>
     );
@@ -101,9 +105,9 @@ const Home = () => {
         </div>
 
         {/* Search and Filters */}
-        <SearchFilterBar 
-          onSearch={handleSearch} 
-          onFilter={handleFilter} 
+        <SearchFilterBar
+          onSearch={handleSearch}
+          onFilter={handleFilter}
         />
 
         {/* Results Count */}
@@ -128,8 +132,8 @@ const Home = () => {
               No companies found
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              {searchTerm || filters.type || filters.rating 
-                ? 'Try adjusting your search or filters' 
+              {searchTerm || filters.type || filters.rating
+                ? 'Try adjusting your search or filters'
                 : 'No companies have been added yet'}
             </p>
           </div>
