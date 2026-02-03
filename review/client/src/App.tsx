@@ -28,6 +28,87 @@ import SuggestCompany from './pages/SuggestCompany.tsx';
 // Main Pages
 import Home from './pages/Home.tsx';
 
+const AnimatedRoutes = () => {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+          <Navbar />
+          <Home />
+        </div>
+      } />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/api/auth/reset-password" element={<ResetPassword />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/change-password"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+              <Navbar />
+              <ChangePassword />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/companies/:id"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+              <Navbar />
+              <CompanyDetail />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/suggest-company"
+        element={
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+            <Navbar />
+            <SuggestCompany />
+          </div>
+        }
+      />
+
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+              <Navbar />
+              <AdminDashboard />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+              <Navbar />
+              <AdminReportedReviews />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Redirect /admin to dashboard */}
+      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+
+      {/* 404 fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -45,45 +126,7 @@ function App() {
             }}
           />
 
-          <Navbar />
-
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-            <Route path="/companies/:id" element={<CompanyDetail />} />
-            <Route path="/suggest-company" element={<SuggestCompany />} />
-
-            {/* Admin Routes */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/admin/reports"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <AdminReportedReviews />
-                </ProtectedRoute>
-              }
-            />
-
-
-            {/* Redirect /admin to dashboard */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-
-            {/* 404 fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatedRoutes />
         </div>
       </Router>
     </AuthProvider>

@@ -14,8 +14,8 @@ Review.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Company.belongsTo(Type, { foreignKey: 'typeId', as: 'type' });
 Type.hasMany(Company, { foreignKey: 'typeId' });
 
-Review.belongsTo(Company, { foreignKey: 'companyId', as: 'company' });
-Company.hasMany(Review, { foreignKey: 'companyId' });
+Review.belongsTo(Company, { foreignKey: 'companyId', as: 'company', onDelete: 'CASCADE' });
+Company.hasMany(Review, { foreignKey: 'companyId', onDelete: 'CASCADE', hooks: true });
 
 // Fix: set cascade delete for ReviewVotes
 Review.hasMany(ReviewVote, {
@@ -28,6 +28,7 @@ ReviewVote.belongsTo(Review, { foreignKey: 'reviewId' });
 ReviewVote.belongsTo(User, { foreignKey: 'userId' });
 
 ReviewReport.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Review.hasMany(ReviewReport, { foreignKey: 'reviewId', onDelete: 'CASCADE', hooks: true });
 ReviewReport.belongsTo(Review, { foreignKey: 'reviewId', as: 'review' });
 
 module.exports = {

@@ -16,6 +16,16 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 
 // Interface definitions
@@ -508,6 +518,35 @@ const AdminDashboard = () => {
                 </p>
               </div>
             </Link>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Companies by Type
+          </h2>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={types.map(t => ({
+                  name: t.name,
+                  count: companies.filter(c => c.typeId === t.id).length
+                }))}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }}
+                  itemStyle={{ color: '#fff' }}
+                  cursor={{ fill: 'transparent' }}
+                />
+                <Legend />
+                <Bar dataKey="count" name="Companies" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
