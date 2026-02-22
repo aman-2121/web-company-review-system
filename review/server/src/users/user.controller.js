@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const EmailValidator = require('../utils/emailValidator');
 const { User } = require('../models');
 
@@ -588,6 +589,145 @@ exports.addAdmin = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during admin creation'
+    });
+  }
+};
+
+// Get all users (admin only)
+exports.getAllUsers = async (req, res) => {
+  try {
+    // Check if current user is admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { search, role, page = 1, limit = 20 } = req.query;
+    
+    const where = {};
+    
+    // Search by name or email
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+    
+    // Filter by role
+    if (role) {
+      where.role = role;
+    } else {
+      // By default, exclude admins - admin should only see other roles
+      where.role = { [Op.ne]: 'admin' };
+    }
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows: users } = await User.findAndCountAll({
+      where,
+      attributes: ['id', 'name', 'email', 'role', 'isVerified', 'createdAt', 'updatedAt'],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    res.json({
+      success: true,
+      users: users,
+      total: count,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(count / limit)
+    });
+  } catch (err) {
+    console.error('Get all users error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching users'
+    });
+  }
+};
+
+// Get user by ID (admin only)
+exports.getUserById = async (req, res) => {
+  try {
+    // Check if current user is admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'name', 'email', 'role', 'isVerified', 'createdAt', 'updatedAt', 'googleId']
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: user
+    });
+  } catch (err) {
+    console.error('Get user by ID error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching user'
+    });
+  }
+};
+
+// Delete user (admin only)
+exports.deleteUser = async (req, res) => {
+  try {
+    // Check if current user is admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+
+    // Prevent admin from deleting themselves
+    if (req.user.id === parseInt(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own account'
+      });
+    }
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    await user.destroy();
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting user'
     });
   }
 };

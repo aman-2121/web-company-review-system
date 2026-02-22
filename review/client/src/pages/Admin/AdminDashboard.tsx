@@ -13,6 +13,7 @@ import {
   Eye,
   Plus,
   Trash2,
+  Users,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -452,7 +453,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -515,6 +516,25 @@ const AdminDashboard = () => {
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   View Reports →
+                </p>
+              </div>
+            </Link>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+            <Link
+              to="/admin/users"
+              className="flex items-center hover:bg-gray-50 dark:hover:bg-gray-700 p-2 -m-2 rounded-lg transition-colors"
+            >
+              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  User Management
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Manage Users 
                 </p>
               </div>
             </Link>

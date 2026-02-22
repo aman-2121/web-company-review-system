@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 
-const { register, login, logout, getCurrentUser, forgotPassword, verifyResetCode, resetPassword, changePassword, getAllAdmins, addAdmin } = require('./user.controller');
+const { register, login, logout, getCurrentUser, forgotPassword, verifyResetCode, resetPassword, changePassword, getAllAdmins, addAdmin, getAllUsers, getUserById, deleteUser } = require('./user.controller');
 
 router.post('/register', register);
 router.post('/login', passport.authenticate('local'), login);
@@ -58,6 +58,15 @@ router.post('/admin/add-admin', protect, authorize('admin'), addAdmin);
 
 // Get all admins route (admin only)
 router.get('/admin/admins', protect, authorize('admin'), getAllAdmins);
+
+// Get all users (admin only)
+router.get('/admin/users', protect, authorize('admin'), getAllUsers);
+
+// Get user by ID (admin only)
+router.get('/admin/users/:id', protect, authorize('admin'), getUserById);
+
+// Delete user (admin only)
+router.delete('/admin/users/:id', protect, authorize('admin'), deleteUser);
 
 // Auth check route
 router.get('/auth-check', (req, res) => {
