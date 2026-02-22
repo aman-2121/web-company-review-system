@@ -20,6 +20,7 @@ import ChangePassword from './pages/Auth/ChangePassword.tsx';
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard.tsx';
 import AdminReportedReviews from './pages/Admin/AdminReportedReviews.tsx';
+import UserManagement from './pages/Admin/UserManagement.tsx';
 
 // Company Pages
 import CompanyDetail from './pages/Company/CompanyDetail.tsx';
@@ -95,6 +96,17 @@ const AnimatedRoutes = () => {
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
               <Navbar />
               <AdminReportedReviews />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+              <Navbar />
+              <UserManagement />
             </div>
           </ProtectedRoute>
         }

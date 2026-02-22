@@ -49,6 +49,7 @@ app.use('/', userRoutes); // Catch-all for routes that might miss /api (like OAu
 app.use('/api/companies', require('./companies/company.routes'));
 app.use('/api/reviews', require('./reviews/review.routes'));
 app.use('/api/types', require('./types/types.routes'));
+app.use('/api/admin', require('./admin/admin.routes'));
 
 
 // ✅ DB Sync & Start Server
