@@ -61,6 +61,11 @@ exports.getCompanyById = async (req, res) => {
       return res.status(404).json({ message: 'Company not found' });
     }
 
+    // Only admins can view pending companies
+    if (!company.isApproved && req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Company is pending approval' });
+    }
+
     res.json(company);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

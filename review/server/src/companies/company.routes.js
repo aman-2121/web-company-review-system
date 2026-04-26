@@ -38,7 +38,7 @@ router.get('/', getAllCompanies);
 // Admin only
 router.get('/pending', protect, authorize('admin'), getPendingCompanies);
 
-router.get('/:id', getCompanyById);
+router.get('/:id', protect, getCompanyById);
 
 // User can submit company (goes to pending)
 router.post('/', protect, upload.single('image'), createCompany);

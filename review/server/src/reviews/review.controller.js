@@ -8,6 +8,14 @@ const { Review, ReviewReport, User, Company } = require('../models');
 const createReview = async (req, res) => {
   const { companyId, rating, comment, isAnonymous } = req.body; // ✅ include isAnonymous
 
+  const company = await Company.findByPk(companyId);
+  if (!company) {
+    return res.status(404).json({ message: 'Company not found' });
+  }
+  if (!company.isApproved) {
+    return res.status(400).json({ message: 'Company must be approved before reviewing' });
+  }
+
   const existing = await Review.findOne({
     where: { companyId, userId: req.user.id }
   });
@@ -42,6 +50,11 @@ const updateReview = async (req, res) => {
 
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
+    }
+
+    const company = await Company.findByPk(review.companyId);
+    if (!company.isApproved) {
+      return res.status(400).json({ message: 'Company must be approved before reviewing' });
     }
 
     if (review.userId !== req.user.id && req.user.role.name !== 'admin') {
