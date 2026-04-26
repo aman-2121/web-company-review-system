@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Building, MapPin, Star, Phone, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Building, MapPin, Star, Phone, Mail, ChevronDown, ChevronUp, Clock, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useParams } from 'react-router-dom';
 
@@ -401,6 +401,21 @@ const CompanyDetail: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            {/* Pending Approval Banner */}
+            {company.isApproved === false && (
+              <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
+                    Pending Admin Approval
+                  </h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                    This company is awaiting approval. Reviews and ratings are disabled until an admin approves it.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -455,13 +470,27 @@ const CompanyDetail: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-8 transition-all duration-300">
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <ReviewForm
-                  companyId={company.id}
-                  existingReview={editingReview}
-                  onSubmit={handleReviewSubmit}
-                  onCancel={() => setEditingReview(null)}
-                  user={user}
-                />
+                {company.isApproved === false ? (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-center shadow-lg">
+                    <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Clock className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Reviews Disabled
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      This company is pending approval. Reviews and ratings will be enabled once an admin approves it.
+                    </p>
+                  </div>
+                ) : (
+                  <ReviewForm
+                    companyId={company.id}
+                    existingReview={editingReview}
+                    onSubmit={handleReviewSubmit}
+                    onCancel={() => setEditingReview(null)}
+                    user={user}
+                  />
+                )}
               </div>
             </div>
           </div>

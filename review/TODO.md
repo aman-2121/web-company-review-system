@@ -1,55 +1,57 @@
-# Admin Dashboard with CRUD and Category Management - Implementation Status
+# TODO: Enforce Pending Company Approval Logic
 
-## ✅ Completed Tasks
+## Requirements
+1. When a user suggests a company, it should go into "pending" status. ✅
+2. Admin can only VIEW the company details in pending state. ✅
+3. Admin must APPROVE the company before:
+   - It appears in the main company list ✅
+   - Users can review or rate it ✅
+4. Admin should NOT be able to review or rate a company before approval. ✅
 
-### Backend API Enhancements
-- [x] **Add PUT endpoint for types** - Implemented `updateType` controller function with validation
-- [x] **Add DELETE endpoint for types** - Implemented `deleteType` controller function with company usage check
-- [x] **Update routes** - Added PUT and DELETE routes in `types.routes.js` with admin authorization
-- [x] **Add validation** - Allow deletion of types by reassigning companies to unassigned (null)
-- [x] **Error handling** - Comprehensive error responses for all operations
+## Changes Made
 
-### Frontend Admin Dashboard
-- [x] **Add Types tab** - New tab in admin dashboard for category management
-- [x] **Create TypesTable component** - Table displaying type names and company counts
-- [x] **Add edit functionality** - Edit button and modal for updating type names
-- [x] **Add delete functionality** - Delete button with confirmation for removing types
-- [x] **Import Edit icon** - Added missing Edit icon import from lucide-react
-- [x] **State management** - Added state for editing type and modal visibility
-- [x] **API integration** - Connected frontend to new PUT and DELETE endpoints
+### Server-Side
 
-### Testing & Quality Assurance
-- [x] **Backend API testing** - Verified all CRUD endpoints work correctly
-- [x] **Frontend compilation** - TypeScript compilation passes without errors
-- [x] **Code linting** - ESLint checks pass without warnings
-- [x] **Integration testing** - Server and client build successfully
-- [x] **Security testing** - Admin authorization properly enforced
+1. **`review/server/src/companies/company.routes.js`** ✅
+   - Added `protect` middleware to `GET /:id` route
 
-## 📋 Implementation Details
+2. **`review/server/src/companies/company.controller.js`** — `getCompanyById` ✅
+   - Added check: if company is pending and user is not admin → return `403 Forbidden`
+   - Admin can still view pending company details
 
-### Files Modified:
-- `review/server/src/types/types.controller.js` - Added updateType and deleteType functions
-- `review/server/src/types/types.routes.js` - Added PUT and DELETE routes
-- `review/client/src/pages/Admin/AdminDashboard.tsx` - Enhanced with types management UI
+3. **`review/server/src/reviews/review.controller.js`** — `createReview` ✅
+   - Added company approval check before creating review
+   - Returns `400` if company is not approved
+   - Applies to ALL users including admins
 
-### Key Features Implemented:
-- **Full CRUD for Types**: Create, Read, Update, Delete operations
-- **Data Integrity**: Prevents deletion of types in use by companies
-- **User Experience**: Modal forms, confirmations, real-time updates
-- **Security**: Admin-only access with role-based authorization
-- **Responsive Design**: Works on all screen sizes with dark mode support
+4. **`review/server/src/reviews/review.controller.js`** — `updateReview` ✅
+   - Added company approval check before updating review
+   - Returns `400` if company is not approved
 
-### API Endpoints:
-- `GET /api/types` - Retrieve all types (public)
-- `POST /api/types` - Create new type (admin only)
-- `PUT /api/types/:id` - Update type (admin only)
-- `DELETE /api/types/:id` - Delete type (admin only)
+### Client-Side
 
-## ✅ **Issue Resolution**
-- [x] **Fixed import error** - Added missing `updateType` and `deleteType` imports to `types.routes.js`
-- [x] **Server startup confirmed** - Backend server now starts successfully with nodemon
-- [x] **All endpoints accessible** - API routes properly configured and functional
+5. **`review/client/src/pages/SuggestCompany.tsx`** ✅
+   - Fixed API endpoint from `/api/companies/suggest` → `/api/companies`
+   - Updated form fields to match server model (`address`, `typeId`, `description`, `phoneNumber`, `email`)
+   - Fetches types dynamically from `/api/types`
+   - Uses `FormData` to support image upload
+   - Shows pending approval notice
 
-## 🎯 Project Status: COMPLETE ✅
+6. **`review/client/src/pages/Company/CompanyDetail.tsx`** ✅
+   - Shows **"Pending Admin Approval"** banner when `company.isApproved === false`
+   - **Hides the review form** when company is not approved (for both users and admins)
+   - Shows "Reviews Disabled" message with clock icon instead of form
 
-All planned features have been successfully implemented and thoroughly tested. The admin dashboard now provides complete CRUD functionality for both companies and categories with a secure, user-friendly interface.
+## How It Works
+
+1. **User suggests a company** → `POST /api/companies` with `isApproved: false` (server already had this logic)
+2. **Company appears in pending list** → Admin can view at `/admin/dashboard` under "Pending Approval" tab
+3. **Non-admin tries to view pending company** → Gets `403 Forbidden` from server
+4. **Anyone tries to review pending company** → Gets `400 Company must be approved before reviewing`
+5. **Admin approves company** → `PATCH /api/companies/approve/:id` sets `isApproved: true`
+6. **Approved company** → Appears in main list, reviews enabled
+
+## Pre-existing TypeScript Errors (not caused by these changes)
+- `useAuth()` return type issue
+- `ReviewCard` and `ReviewForm` prop type mismatches
+
