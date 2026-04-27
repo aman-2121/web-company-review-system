@@ -5,6 +5,7 @@ import React, {
 
 import axios from 'axios';
 import {
+  Bell,
   Building2,
   LogOut,
   Menu,
@@ -24,7 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, unreadCount } = useAuth();
   const [isDark, toggleDarkMode] = useDarkMode();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -355,6 +356,19 @@ const Navbar = () => {
 
               {user ? (
                 <>
+                  {/* Notification Bell */}
+                  <Link
+                    to={isAdmin ? "/admin/reports" : "/notifications"}
+                    className="relative p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {typeof unreadCount === 'number' && unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+
                   {/* Desktop User Menu */}
                   <div className="hidden md:block relative">
                     <button

@@ -1,6 +1,7 @@
 // server/src/reviews/review.controller.js
 
-const { Review, ReviewReport, User, Company } = require('../models');
+const { Review, ReviewReport, ReviewReply, User, Company } = require('../models');
+const { createNotification, createNotificationForAdmins } = require('../notifications/notification.controller');
 
 /**
  * Create a new review
@@ -210,10 +211,156 @@ const reportReview = async (req, res) => {
       return res.status(400).json({ message: 'Already reported' });
     }
 
+    // Notify all admins about the new report
+    await createNotificationForAdmins({
+      type: 'report',
+      title: 'New Review Report',
+      message: `A review has been reported. Reason: "${reason.substring(0, 100)}${reason.length > 100 ? '...' : ''}"`,
+      relatedId: report.id,
+      relatedType: 'report',
+    });
+
     res.status(201).json({ message: 'Reported successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Get all replies for a specific review (public)
+ */
+const getReplies = async (req, res) => {
+  try {
+    const replies = await ReviewReply.findAll({
+      where: { reviewId: req.params.id },
+      include: [
+        {
+          model: User,
+          as: 'admin',
+          attributes: ['id', 'name'],
+        },
+      ],
+      order: [['createdAt', 'ASC']],
+    });
+
+    res.json(replies);
+  } catch (err) {
+    console.error('Error fetching replies:', err);
+    res.status(500).json({ message: 'Server error while fetching replies' });
+  }
+};
+
+/**
+ * Admin: Add a reply to a review
+ */
+const addReply = async (req, res) => {
+  const { message } = req.body;
+  const { id } = req.params;
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({ message: 'Reply message is required' });
+  }
+
+  try {
+    const review = await Review.findByPk(id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    const reply = await ReviewReply.create({
+      reviewId: id,
+      adminId: req.user.id,
+      message: message.trim(),
+    });
+
+    const replyWithAdmin = await ReviewReply.findByPk(reply.id, {
+      include: [
+        {
+          model: User,
+          as: 'admin',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+
+    // Notify the review owner about the admin reply
+    if (review.userId !== req.user.id) {
+      await createNotification({
+        userId: review.userId,
+        type: 'reply',
+        title: 'New Reply on Your Review',
+        message: `An admin has replied to your review: "${message.trim().substring(0, 100)}${message.trim().length > 100 ? '...' : ''}"`,
+        relatedId: review.id,
+        relatedType: 'review',
+        companyId: review.companyId,
+      });
+    }
+
+    res.status(201).json({ reply: replyWithAdmin });
+  } catch (err) {
+    console.error('Error adding reply:', err);
+    res.status(500).json({ message: 'Server error while adding reply' });
+  }
+};
+
+/**
+ * Admin: Update a reply
+ */
+const updateReply = async (req, res) => {
+  const { message } = req.body;
+  const { replyId } = req.params;
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({ message: 'Reply message is required' });
+  }
+
+  try {
+    const reply = await ReviewReply.findByPk(replyId);
+    if (!reply) return res.status(404).json({ message: 'Reply not found' });
+
+    if (reply.adminId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update this reply' });
+    }
+
+    reply.message = message.trim();
+    await reply.save();
+
+    const replyWithAdmin = await ReviewReply.findByPk(reply.id, {
+      include: [
+        {
+          model: User,
+          as: 'admin',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+
+    res.json({ reply: replyWithAdmin });
+  } catch (err) {
+    console.error('Error updating reply:', err);
+    res.status(500).json({ message: 'Server error while updating reply' });
+  }
+};
+
+/**
+ * Admin: Delete a reply
+ */
+const deleteReply = async (req, res) => {
+  const { replyId } = req.params;
+
+  try {
+    const reply = await ReviewReply.findByPk(replyId);
+    if (!reply) return res.status(404).json({ message: 'Reply not found' });
+
+    if (reply.adminId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete this reply' });
+    }
+
+    await reply.destroy();
+
+    res.json({ message: 'Reply deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting reply:', err);
+    res.status(500).json({ message: 'Server error while deleting reply' });
   }
 };
 
@@ -225,4 +372,8 @@ module.exports = {
   deleteReview,
   dismissReport,
   reportReview,
+  getReplies,
+  addReply,
+  updateReply,
+  deleteReply,
 };

@@ -6,6 +6,8 @@ const Type = require('../types/type.model')(sequelize);
 const Review = require('../reviews/review.model')(sequelize);
 const ReviewVote = require('../reviews/review_vote.model')(sequelize);
 const ReviewReport = require('../reviews/review_report.model')(sequelize);
+const ReviewReply = require('../reviews/review_reply.model')(sequelize);
+const Notification = require('../notifications/notification.model')(sequelize);
 
 // Define associations
 User.hasMany(Review, { foreignKey: 'userId' });
@@ -31,6 +33,15 @@ ReviewReport.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Review.hasMany(ReviewReport, { foreignKey: 'reviewId', onDelete: 'CASCADE', hooks: true });
 ReviewReport.belongsTo(Review, { foreignKey: 'reviewId', as: 'review' });
 
+// ReviewReply associations
+Review.hasMany(ReviewReply, { foreignKey: 'reviewId', onDelete: 'CASCADE', hooks: true });
+ReviewReply.belongsTo(Review, { foreignKey: 'reviewId', as: 'review' });
+ReviewReply.belongsTo(User, { foreignKey: 'adminId', as: 'admin' });
+
+// Notification associations
+User.hasMany(Notification, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 module.exports = {
   User,
   Company,
@@ -38,5 +49,7 @@ module.exports = {
   Review,
   ReviewVote,
   ReviewReport,
+  ReviewReply,
+  Notification,
   sequelize,
 };

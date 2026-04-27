@@ -7,7 +7,11 @@ const {
   getReports,
   resolveReport,
   dismissReport,
-  reportReview
+  reportReview,
+  getReplies,
+  addReply,
+  updateReply,
+  deleteReply
 } = require('./review.controller');
 const { voteReview, getLikes } = require('./review_vote.controller');
 
@@ -30,5 +34,11 @@ router.delete('/:id', protect, deleteReview);
 router.get('/reports', protect, authorize('admin'), getReports);
 router.delete('/reports/:id', protect, authorize('admin'), resolveReport);
 router.delete('/reports/:id/dismiss', protect, authorize('admin'), dismissReport);
+
+// Reply routes (get is public, add/update/delete admin only)
+router.get('/:id/replies', getReplies);
+router.post('/:id/replies', protect, authorize('admin'), addReply);
+router.put('/:id/replies/:replyId', protect, authorize('admin'), updateReply);
+router.delete('/:id/replies/:replyId', protect, authorize('admin'), deleteReply);
 
 module.exports = router;

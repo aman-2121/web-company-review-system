@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import os
+
+content = r"""import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Edit2,
@@ -183,7 +185,6 @@ const ReviewCard = ({ review, onEdit, onDelete, onReport }: any) => {
               {formatDate(review.createdAt)}
             </p>
           </div>
-        </div>
 
         <div className="flex items-center space-x-2">
           <AverageRating rating={review.rating} size="sm" />
@@ -239,7 +240,6 @@ const ReviewCard = ({ review, onEdit, onDelete, onReport }: any) => {
             </div>
           )}
         </div>
-      </div>
 
       <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
         {review.comment}
@@ -338,7 +338,6 @@ const ReviewCard = ({ review, onEdit, onDelete, onReport }: any) => {
                       Save
                     </button>
                   </div>
-                </div>
               ) : (
                 <p className="text-sm text-blue-900 dark:text-blue-200 leading-relaxed">
                   {reply.message}
@@ -394,7 +393,6 @@ const ReviewCard = ({ review, onEdit, onDelete, onReport }: any) => {
               <span>Send Reply</span>
             </button>
           </div>
-        </div>
       )}
 
       {/* Report Modal */}
@@ -431,7 +429,6 @@ const ReviewCard = ({ review, onEdit, onDelete, onReport }: any) => {
                 Report
               </button>
             </div>
-          </div>
         </div>
       )}
     </div>
@@ -439,3 +436,10 @@ const ReviewCard = ({ review, onEdit, onDelete, onReport }: any) => {
 };
 
 export default ReviewCard;
+"""
+
+filepath = r'c:/Users/DBU/company/review/client/src/components/ReviewCard.tsx'
+with open(filepath, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f'File written successfully to {filepath}')

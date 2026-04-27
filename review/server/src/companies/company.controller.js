@@ -1,6 +1,6 @@
 // server/src/companies/company.controller.js
 const { Op } = require('sequelize');
-const { Company, Type, Review, User } = require('../models'); // assuming you export all models
+const { Company, Type, Review, User, ReviewReply } = require('../models'); // assuming you export all models
 
 exports.getAllCompanies = async (req, res) => {
   try {
@@ -51,7 +51,14 @@ exports.getCompanyById = async (req, res) => {
         {
           model: Review,
           as: 'Reviews',
-          include: [{ model: User, as: 'user', attributes: ['name'] }],
+          include: [
+            { model: User, as: 'user', attributes: ['name'] },
+            {
+              model: ReviewReply,
+              as: 'ReviewReplies',
+              include: [{ model: User, as: 'admin', attributes: ['id', 'name'] }],
+            },
+          ],
           order: [['createdAt', 'DESC']],
         },
       ],

@@ -15,6 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Configure axios defaults
   axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -28,10 +29,22 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get('/api/me');
       setUser(response.data.user);
+      if (response.data.user) {
+        fetchUnreadCount();
+      }
     } catch (error) {
       setUser(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await axios.get('/api/notifications');
+      setUnreadCount(response.data.unreadCount || 0);
+    } catch (error) {
+      setUnreadCount(0);
     }
   };
 
@@ -79,6 +92,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     checkAuth,
+    unreadCount,
+    fetchUnreadCount,
     isAdmin: user && (user.role === 'admin' || user.isAdmin === true)
   };
 
